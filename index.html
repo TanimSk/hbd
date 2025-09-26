@@ -1,82 +1,191 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Responsive Comic Viewer — Page Turn Animation</title>
+  <title>HBD - Tamanna</title>
   <style>
-    :root{
-      --bg:#0b0b0f;
-      --ui:#eceef2;
-      --accent:#ff6b6b;
-      --max-width:900px; /* maximum viewer width on large screens */
+    :root {
+      --bg: #0b0b0f;
+      --ui: #eceef2;
+      --accent: #ff6b6b;
+      --max-width: 900px;
+      /* maximum viewer width on large screens */
     }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071018 0%, #08121a 60%);color:var(--ui);font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-    .app{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
 
-    .viewer-wrap{width:100%;max-width:var(--max-width);margin:0 auto}
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: linear-gradient(180deg, #071018 0%, #08121a 60%);
+      color: var(--ui);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      box-sizing: border-box
+    }
+
+    .viewer-wrap {
+      width: 100%;
+      max-width: var(--max-width);
+      margin: 0 auto
+    }
 
     /* keep the original comic aspect ratio 1410 x 2250 -> aspect ratio = height/width = 2250/1410 = 1.5957 */
-    .stage{
-      position:relative;
-      width:100%;
+    .stage {
+      position: relative;
+      width: 100%;
       /* use aspect-ratio for modern browsers */
-      aspect-ratio:1410/2250; /* width/height */
-      background:#000;
-      border-radius:14px;
-      overflow:hidden;
-      box-shadow:0 10px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
-      transform-origin:center center;
+      aspect-ratio: 1410/2250;
+      /* width/height */
+      background: #000;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      transform-origin: center center;
     }
 
     /* viewport-fit safe area */
-    .stage .canvas{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+    .stage .canvas {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
 
     /* two-sided flip card used for page-turn */
-    .page-flip{
-      position:absolute;inset:0;pointer-events:none;transform-style:preserve-3d;transition:transform 900ms cubic-bezier(.22,.9,.34,1);
-      will-change:transform;
-      transform-origin:left center; /* pivot like a page turning from the left */
+    .page-flip {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transform-style: preserve-3d;
+      transition: transform 900ms cubic-bezier(.22, .9, .34, 1);
+      will-change: transform;
+      transform-origin: left center;
+      /* pivot like a page turning from the left */
     }
-    .page-face{
-      position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;border-radius:12px;backface-visibility:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.5)
+
+    .page-face {
+      position: absolute;
+      inset: 0;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5)
     }
-    .page-face.back{transform:rotateY(180deg);}
+
+    .page-face.back {
+      transform: rotateY(180deg);
+    }
 
     /* current page (static) */
-    .current-page{position:absolute;inset:0;background-size:cover;background-position:center;border-radius:12px}
+    .current-page {
+      position: absolute;
+      inset: 0;
+      background-size: contain !important;
+      background-position: center;
+      border-radius: 12px;
+
+    }
 
     /* UI */
-    .controls{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:12px}
-    .left-controls{display:flex;gap:8px;align-items:center}
-    button.icon{background:rgba(255,255,255,0.06);color:var(--ui);border:0;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
-    button.icon:active{transform:translateY(1px)}
-    button.icon[disabled]{opacity:.45;cursor:not-allowed}
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px
+    }
 
-    .progress{font-size:14px;opacity:0.9}
+    .left-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    button.icon {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--ui);
+      border: 0;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600
+    }
+
+    button.icon:active {
+      transform: translateY(1px)
+    }
+
+    button.icon[disabled] {
+      opacity: .45;
+      cursor: not-allowed
+    }
+
+    .progress {
+      font-size: 14px;
+      opacity: 0.9
+    }
 
     /* small devices adjustments */
-    @media (max-width:520px){
-      :root{--max-width:460px}
-      button.icon{padding:8px 10px;font-size:14px}
+    @media (max-width:520px) {
+      :root {
+        --max-width: 460px
+      }
+
+      button.icon {
+        padding: 8px 10px;
+        font-size: 14px
+      }
     }
 
     /* shadow/lighting for the page-turned edge */
-    .page-flip::after{
-      content:"";position:absolute;right:0;top:0;bottom:0;width:18%;pointer-events:none;mix-blend-mode:multiply;filter:blur(10px);opacity:0;transition:opacity 400ms;
-      background:linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.0));
-      border-radius:0 12px 12px 0;
+    .page-flip::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 18%;
+      pointer-events: none;
+      mix-blend-mode: multiply;
+      filter: blur(10px);
+      opacity: 0;
+      transition: opacity 400ms;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.0));
+      border-radius: 0 12px 12px 0;
     }
 
-    .page-flip.turning::after{opacity:1}
+    .page-flip.turning::after {
+      opacity: 1
+    }
 
     /* transitions for smoother blit when resizing */
-    .current-page,.page-face{transition:transform 300ms ease, opacity 300ms ease}
+    .current-page,
+    .page-face {
+      transition: transform 300ms ease, opacity 300ms ease
+    }
 
     /* caption */
-    .caption{margin-top:10px;color:rgba(255,255,255,0.75);font-size:13px;text-align:center}
+    .caption {
+      margin-top: 10px;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 13px;
+      text-align: center
+    }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="viewer-wrap">
@@ -98,15 +207,30 @@
           <div class="progress" id="progress">Page 1 / 11</div>
         </div>
       </div>
-      <div class="caption">Use ← → keys or swipe left/right on touch devices to navigate. Images expected at <code>pages/page1.png</code> ... <code>pages/page11.png</code>.</div>
+      <div class="caption">Use ← → keys or swipe left/right on touch devices to navigate. Images expected at
+        <code>pages/page1.png</code> ... <code>pages/page11.png</code>.
+      </div>
     </div>
   </div>
 
+  <audio id="bgMusic" hidden>
+    <source src="music.mp3" type="audio/mpeg">
+  </audio>
+
   <script>
-    (function(){
+    const music = document.getElementById("bgMusic");
+    function playMusicOnce() {
+      music.play().catch(err => console.log("Autoplay blocked:", err));
+      document.removeEventListener("click", playMusicOnce);
+      document.removeEventListener("keydown", playMusicOnce);
+    }
+    document.addEventListener("click", playMusicOnce);
+    document.addEventListener("keydown", playMusicOnce);
+
+    (function () {
       // CONFIG
       const TOTAL = 11;
-      const PAGE_PATH = (i)=>`https://github.com/TanimSk/hbd/blob/main/pages/${i}.png?raw=true`;
+      const PAGE_PATH = (i) => `https://github.com/TanimSk/hbd/blob/main/pages/${i}.png?raw=true`;
       const stage = document.getElementById('stage');
       const canvas = document.getElementById('canvas');
       const currentEl = document.getElementById('current');
@@ -118,29 +242,29 @@
 
       let page = 1;
       let isTurning = false;
-      const images = new Array(TOTAL+1);
+      const images = new Array(TOTAL + 1);
 
       // Preload images and show progress
       let loaded = 0;
-      function preloadAll(){
-        for(let i=1;i<=TOTAL;i++){
+      function preloadAll() {
+        for (let i = 1; i <= TOTAL; i++) {
           const img = new Image();
           img.src = PAGE_PATH(i);
-          img.onload = ()=>{loaded++; if(i===1) renderPage(1); updateProgress(); }
-          img.onerror = ()=>{loaded++; console.warn('Failed to load', img.src); updateProgress();}
+          img.onload = () => { loaded++; if (i === 1) renderPage(1); updateProgress(); }
+          img.onerror = () => { loaded++; console.warn('Failed to load', img.src); updateProgress(); }
           images[i] = img;
         }
       }
 
-      function updateProgress(){
+      function updateProgress() {
         progress.textContent = `Page ${page} / ${TOTAL} — Loaded ${loaded}/${TOTAL}`;
-        prevBtn.disabled = (page<=1) || isTurning;
-        nextBtn.disabled = (page>=TOTAL) || isTurning;
+        prevBtn.disabled = (page <= 1) || isTurning;
+        nextBtn.disabled = (page >= TOTAL) || isTurning;
       }
 
-      function renderPage(n){
+      function renderPage(n) {
         const img = images[n];
-        if(img && img.complete){
+        if (img && img.complete) {
           currentEl.style.backgroundImage = `url(${img.src})`;
         } else {
           currentEl.style.background = 'linear-gradient(180deg,#111,#222)';
@@ -150,24 +274,24 @@
       }
 
       // create flipping element and animate from current->next (direction: 'next' or 'prev')
-      function turnTo(target){
-        if(isTurning || target<1 || target> TOTAL || target===page) return;
+      function turnTo(target) {
+        if (isTurning || target < 1 || target > TOTAL || target === page) return;
         isTurning = true; updateProgress();
 
-        const dir = (target>page)? 'next' : 'prev';
+        const dir = (target > page) ? 'next' : 'prev';
         const frontImg = images[page] ? images[page].src : PAGE_PATH(page);
         const backImg = images[target] ? images[target].src : PAGE_PATH(target);
 
         // build flip card
         const flip = document.createElement('div');
         flip.className = 'page-flip';
-        flip.style.transformOrigin = (dir==='next') ? 'right center' : 'left center';
+        flip.style.transformOrigin = (dir === 'next') ? 'right center' : 'left center';
         // make pivot on right when moving forward so page peels leftwards
-        if(dir==='next') flip.style.transformOrigin = 'right center';
+        if (dir === 'next') flip.style.transformOrigin = 'right center';
         else flip.style.transformOrigin = 'left center';
 
-        const front = document.createElement('div'); front.className='page-face front';
-        const back = document.createElement('div'); back.className='page-face back';
+        const front = document.createElement('div'); front.className = 'page-face front';
+        const back = document.createElement('div'); back.className = 'page-face back';
 
         // set images as backgrounds
         front.style.backgroundImage = `url(${frontImg})`;
@@ -177,7 +301,7 @@
         canvas.appendChild(flip);
 
         // initial orientation depending on direction
-        if(dir==='next'){
+        if (dir === 'next') {
           flip.style.transform = 'rotateY(0deg)';
         } else {
           // flipping backwards: show back rotated so rotation reveals previous
@@ -185,10 +309,10 @@
         }
 
         // small delay to allow append to render before animating
-        requestAnimationFrame(()=>{
+        requestAnimationFrame(() => {
           flip.classList.add('turning');
           // choose rotation target
-          if(dir==='next'){
+          if (dir === 'next') {
             // pivot from right -> rotate to -180 to show back
             flip.style.transform = 'rotateY(-180deg)';
           } else {
@@ -197,7 +321,7 @@
         });
 
         // listen for end of transition
-        const onTransitionEnd = (e)=>{
+        const onTransitionEnd = (e) => {
           flip.removeEventListener('transitionend', onTransitionEnd);
           // set the current page to target
           renderPage(target);
@@ -208,42 +332,42 @@
         flip.addEventListener('transitionend', onTransitionEnd);
 
         // safety timeout in case transitionend doesn't fire
-        setTimeout(()=>{ if(isTurning){ flip.remove(); renderPage(target); isTurning=false; updateProgress(); } }, 1200);
+        setTimeout(() => { if (isTurning) { flip.remove(); renderPage(target); isTurning = false; updateProgress(); } }, 1200);
       }
 
       // Controls
-      prevBtn.addEventListener('click', ()=>turnTo(page-1));
-      nextBtn.addEventListener('click', ()=>turnTo(page+1));
+      prevBtn.addEventListener('click', () => turnTo(page - 1));
+      nextBtn.addEventListener('click', () => turnTo(page + 1));
 
       // keyboard
-      window.addEventListener('keydown', (e)=>{
-        if(e.key==='ArrowRight') nextBtn.click();
-        if(e.key==='ArrowLeft') prevBtn.click();
-        if(e.key==='f' || (e.key==='F' && e.altKey)) toggleFull();
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') nextBtn.click();
+        if (e.key === 'ArrowLeft') prevBtn.click();
+        if (e.key === 'f' || (e.key === 'F' && e.altKey)) toggleFull();
       });
 
       // touch swipe for mobile
       let touchStartX = null;
-      stage.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches[0]) touchStartX = e.touches[0].clientX; });
-      stage.addEventListener('touchend', (e)=>{
-        if(!touchStartX) return; const dx = (e.changedTouches[0].clientX - touchStartX);
-        if(Math.abs(dx) > 40){ if(dx<0) nextBtn.click(); else prevBtn.click(); }
+      stage.addEventListener('touchstart', (e) => { if (e.touches && e.touches[0]) touchStartX = e.touches[0].clientX; });
+      stage.addEventListener('touchend', (e) => {
+        if (!touchStartX) return; const dx = (e.changedTouches[0].clientX - touchStartX);
+        if (Math.abs(dx) > 40) { if (dx < 0) nextBtn.click(); else prevBtn.click(); }
         touchStartX = null;
       });
 
       // Fit / fullscreen
-      function toggleFull(){
-        if(!document.fullscreenElement){ stage.requestFullscreen?.(); }
+      function toggleFull() {
+        if (!document.fullscreenElement) { stage.requestFullscreen?.(); }
         else document.exitFullscreen?.();
       }
       fullBtn.addEventListener('click', toggleFull);
 
       // Fit toggles CSS max width between narrow/wide
-      fitBtn.addEventListener('click', ()=>{
+      fitBtn.addEventListener('click', () => {
         const root = document.documentElement;
         const current = getComputedStyle(root).getPropertyValue('--max-width').trim();
-        if(current.includes('900')) root.style.setProperty('--max-width','1200px');
-        else root.style.setProperty('--max-width','900px');
+        if (current.includes('900')) root.style.setProperty('--max-width', '1200px');
+        else root.style.setProperty('--max-width', '900px');
         // re-render to ensure backgrounds scale nicely
         renderPage(page);
       });
@@ -253,8 +377,9 @@
       renderPage(1);
 
       // expose for debugging
-      window.__comic = {turnTo, renderPage, images};
+      window.__comic = { turnTo, renderPage, images };
     })();
   </script>
 </body>
+
 </html>
